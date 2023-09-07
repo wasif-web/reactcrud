@@ -1,0 +1,70 @@
+/* App.css */
+
+/* Basic styling for the main container */
+h1 {
+  text-align: center;
+  margin-top: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button[type="submit"] {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.alert {
+  background-color: #ffc107;
+  color: #333;
+  text-align: center;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+/* Styling for the list of stories */
+h2 {
+  margin-top: 20px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+
