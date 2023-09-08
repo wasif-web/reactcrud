@@ -1,4 +1,4 @@
-// Import necessary modules
+
 import express from "express";
 import { customAlphabet } from 'nanoid';
 import { MongoClient, ObjectId } from "mongodb";
@@ -23,18 +23,21 @@ const mongodbURI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.
 // Initialize MongoDB client
 const client = new MongoClient(mongodbURI);
 
-// Initialize Pinecone client
+
 const pinecone = new PineconeClient();
 
 const app = express();
 
-// Middleware
+
 app.use(express.json());
 app.use(cors({
-  origin: ["http://localhost:3001",]
+  origin: [
+    //"http://localhost:3001",
+    "*"
+  ]
 }));
 
-// Static files
+
 app.use(express.static(path.join( "./web/build")));
 app.use("/", express.static(path.join( "./web/build")));
 app.use('/static', express.static(path.join('static')));
@@ -120,13 +123,12 @@ app.use((req, res) => {
   res.status(404).send("Not Found");
 });
 
-// Start the server
+
 const port = process.env.PORT || 5001;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-// Handle errors
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);
 });
