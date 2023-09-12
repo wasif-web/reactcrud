@@ -7,51 +7,91 @@ const baseUrl = 'http://localhost:5001';
 function App() {
   const titleInputRef = useRef(null);
   const bodyInputRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [setIsSearching] = useState(false);
+
   const [alert, setAlert] = useState("");
   const [data, setData] = useState([]);
-  const [currentWeather, setCurrentWeather] = useState(null);
 
   useEffect(() => {
     if (alert) {
       setTimeout(() => {
         setAlert("");
-        console.log("Timeout");
-      }, 4000)
-      console.log("Effect");
+      }, 4000);
     }
   }, [alert]);
-  
+
   useEffect(() => {
     getAllStories();
   }, []);
-  
+
   const getAllStories = async () => {
     try {
+      setIsLoading(true);
       const resp = await axios.get(`${baseUrl}/api/v1/stories`);
-      console.log(resp.data);
       setData(resp.data);
-    } catch (error) {
-      console.error("Error fetching stories:", error);
+      setIsLoading(false);
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
     }
-  }
-  
-  const postStory = async (event) => {
-    event.preventDefault();
+  };
 
+  const searchStories = async (e) => {
+    e.preventDefault();
     try {
       setIsLoading(true);
+      const resp = await axios.get(`${baseUrl}/api/v1/search?q=${searchInputRef.current.value}`);
+      setData(resp.data);
+      setIsLoading(false);
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
+    }
+  };
 
+  const postStory = async (event) => {
+    event.preventDefault();
+    try {
+      setIsLoading(true);
       const response = await axios.post(`${baseUrl}/api/v1/story`, {
         title: titleInputRef.current.value,
         body: bodyInputRef.current.value,
       });
-      console.log("Response: ", response.data);
-
       setIsLoading(false);
-
+      getAllStories();
       setAlert(response?.data?.message);
       event.target.reset();
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
+    }
+  };
+
+  const deleteHandler = async (id) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.delete(`${baseUrl}/api/v1/story/${id}`);
+      setIsLoading(false);
+      setAlert(response?.data?.message);
+      getAllStories();
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
+    }
+  };
+
+  const updateStory = async (e, id) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.put(`${baseUrl}/api/v1/story/${id}`, {
+        title: e.target.titleInput.value,
+        body: e.target.bodyInput.value,
+      });
+      setIsLoading(false);
+      getAllStories();
+      setAlert(response?.data?.message);
     } catch (e) {
       setIsLoading(false);
       console.log(e);
@@ -64,6 +104,7 @@ function App() {
 
       <form onSubmit={postStory}>
         <label htmlFor="titleInput">Title: </label>
+        <br />
         <input
           type="text"
           id="titleInput"
@@ -74,6 +115,7 @@ function App() {
         />
         <br />
         <label htmlFor="bodyInput">What's on your mind: </label>
+        <br />
         <textarea
           type="text"
           id="bodyInput"
@@ -88,21 +130,87 @@ function App() {
       </form>
 
       {alert && <div className="alert">{alert}</div>}
+      {isLoading && <div className="loading">Loading...</div>}
 
       <br />
-      <hr />
       <br />
+      <form onSubmit={searchStories} style={{ textAlign: "right" }}>
+        <input
+          ref={searchInputRef}
+          id="searchInput"
+          type="search"
+          placeholder="Search"
+          onFocus={() => {
+            setIsSearching(true);
+          }}
+          onBlur={() => {
+            setIsSearching(false);
+          }}
+        />
+        <button type="submit" hidden>Search</button>
+      </form>
 
-      {/* You can render the data here */}
-      <ul>
-        {data.map((story) => (
-          <li key={story.id}>
-            <strong>Title:</strong> {story.title}
-            <br />
-            <strong>Body:</strong> {story.body}
-          </li>
-        ))}
-      </ul>
+      {data.map((eachStory, index) => (
+        <div key={eachStory?.id} className="storyCard">
+          {eachStory.isEdit ? (
+            <form onSubmit={(e) => updateStory(e, eachStory?.id)}>
+              <label htmlFor="titleInput">Title: </label>
+              <br />
+              <input
+                defaultValue={eachStory?.metadata?.title}
+                name="titleInput"
+                type="text"
+                id="titleInput"
+                maxLength={20}
+                minLength={2}
+                required
+              />
+              <br />
+              <label htmlFor="bodyInput">What's on your mind: </label>
+              <br />
+              <textarea
+                defaultValue={eachStory?.metadata?.body}
+                name="bodyInput"
+                type="text"
+                id="bodyInput"
+                maxLength={999}
+                minLength={10}
+                required
+              ></textarea>
+              <br />
+              <button type="submit">Update</button>
+              <button
+                onClick={() => {
+                  eachStory.isEdit = false;
+                  setData([...data]);
+                }}
+              >
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <div>
+              <h3>{eachStory?.metadata?.title}</h3>
+              <p>{eachStory?.metadata?.body}</p>
+              <button
+                onClick={() => {
+                  deleteHandler(eachStory?.id);
+                }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => {
+                  data[index].isEdit = true;
+                  setData([...data]);
+                }}
+              >
+                Edit
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
